@@ -1,1 +1,6 @@
 Default Admin: <code>admin@campus.edu / pass :admin123
+
+
+note i change the id and the pass:
+
+if you want to change just open an account there.
