@@ -1,0 +1,1 @@
+Default Admin: <code>admin@campus.edu / pass :admin123

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm p-4">
+            <h3 class="mb-3">Edit Post: {{ item.title }}</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Post Type</label>
+                    <select name="post_type" class="form-select" required>
+                        <option value="Lost" {% if item.post_type == 'Lost' %}selected{% endif %}>I Lost Something</option>
+                        <option value="Found" {% if item.post_type == 'Found' %}selected{% endif %}>I Found Something</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" name="title" class="form-control" value="{{ item.title }}" required>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select" required>
+                            {% for cat in ['Electronics', 'ID Cards & Wallets', 'Books & Notes', 'Keys', 'Clothing & Bags', 'Other'] %}
+                                <option value="{{ cat }}" {% if item.category == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Campus Location</label>
+                        <input type="text" name="location" class="form-control" value="{{ item.location }}" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3" required>{{ item.description }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Your Contact Info</label>
+                    <input type="text" name="contact_info" class="form-control" value="{{ item.contact_info }}" required>
+                </div>
+                <div class="mb-3 p-3 bg-light border rounded">
+                    <label class="form-label fw-bold text-primary">Security Verification Question (Optional)</label>
+                    <input type="text" name="security_question" class="form-control" value="{{ item.security_question or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Replace Photo (Leave blank to keep current photo)</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

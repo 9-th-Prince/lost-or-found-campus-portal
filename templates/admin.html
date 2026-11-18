@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-4 text-warning bg-dark p-3 rounded">🛡️ Admin Moderation Panel</h3>
+
+<h5>All Campus Posts ({{ items|length }})</h5>
+<table class="table table-bordered bg-white shadow-sm mb-5">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Title</th>
+            <th>Posted By</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.id }}</td>
+            <td>{{ item.post_type }}</td>
+            <td><a href="{{ url_for('item_detail', item_id=item.id) }}">{{ item.title }}</a></td>
+            <td>{{ item.author.name }} ({{ item.author.email }})</td>
+            <td>{{ item.status }}</td>
+            <td>
+                <a href="{{ url_for('resolve_item', item_id=item.id) }}" class="btn btn-sm btn-success">Toggle Status</a>
+                <a href="{{ url_for('delete_item', item_id=item.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this post?')">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h5>Registered Students ({{ users|length }})</h5>
+<table class="table table-bordered bg-white shadow-sm">
+    <thead class="table-secondary">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ 'Admin' if user.is_admin else 'Student' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="fw-bold mb-4">My Dashboard</h3>
+
+{% if smart_matches %}
+<div class="card border-info shadow-sm mb-4">
+    <div class="card-header bg-info text-dark fw-bold">
+        ✨ Smart Matches Found ({{ smart_matches|length }})
+    </div>
+    <div class="card-body">
+        <p class="small text-muted mb-2">Other students posted opposite Lost/Found items in the same category as your open posts:</p>
+        <div class="list-group">
+            {% for pair in smart_matches %}
+                <a href="{{ url_for('item_detail', item_id=pair.match.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-{{ 'danger' if pair.match.post_type == 'Lost' else 'success' }} me-2">{{ pair.match.post_type }}</span>
+                        <strong>{{ pair.match.title }}</strong> ({{ pair.match.location }})
+                        <small class="text-muted ms-2">matches your "{{ pair.my_item.title }}"</small>
+                    </div>
+                    <span class="btn btn-sm btn-outline-primary">View Match →</span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<h5 class="mb-3">Items I Posted</h5>
+{% for item in items %}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 bg-white">
+        <div>
+            <span class="badge bg-{{ 'danger' if item.post_type == 'Lost' else 'success' }}">{{ item.post_type }}</span>
+            <strong class="ms-2">{{ item.title }}</strong>
+            <span class="badge bg-{{ 'secondary' if item.status == 'Resolved' else 'info text-dark' }} ms-2">{{ item.status }}</span>
+        </div>
+        <div class="d-flex gap-1">
+            <a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">✏️ Edit</a>
+            <a href="{{ url_for('resolve_item', item_id=item.id) }}" class="btn btn-sm btn-outline-success">
+                {{ 'Reopen' if item.status == 'Resolved' else 'Mark Resolved' }}
+            </a>
+            <a href="{{ url_for('delete_item', item_id=item.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this post?')">Delete</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <h6>Claims / Responses Received ({{ item.claims|length }}):</h6>
+        {% if item.claims %}
+            <ul class="list-group">
+                {% for claim in item.claims %}
+                    <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <strong>{{ claim.claimant_name }}</strong> ({{ claim.claimant_contact }}):
+                            <span class="text-primary">"{{ claim.answer }}"</span>
+                        </div>
+                        {% if claim.user_id %}
+                            <a href="{{ url_for('inbox', tab='private', user_id=claim.user_id) }}" class="btn btn-sm btn-primary">
+                                💬 Open Private Chat
+                            </a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted mb-0">No responses yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<p class="text-muted">You haven't posted any items yet. <a href="{{ url_for('post_item') }}">Report one now</a>.</p>
+{% endfor %}
+
+<h5 class="mt-5 mb-3">Items I Claimed / Responded To</h5>
+{% if my_claims %}
+    <div class="list-group shadow-sm">
+        {% for c in my_claims %}
+            <div class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <span class="badge bg-{{ 'danger' if c.item.post_type == 'Lost' else 'success' }}">{{ c.item.post_type }}</span>
+                    <strong>{{ c.item.title }}</strong> (Posted by {{ c.item.author.name }})
+                    <div class="small text-muted">Your response: "{{ c.answer }}"</div>
+                </div>
+                <a href="{{ url_for('inbox', tab='private', user_id=c.item.user_id) }}" class="btn btn-sm btn-outline-primary">
+                    💬 Open Private Chat with {{ c.item.author.name }}
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-muted">You haven't submitted any claims yet.</p>
+{% endif %}
+{% endblock %}

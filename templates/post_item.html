@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm p-4">
+            <h3 class="mb-3">Report a Lost or Found Item</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Post Type</label>
+                    <select name="post_type" class="form-select" required>
+                        <option value="Lost">I Lost Something</option>
+                        <option value="Found">I Found Something</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g., Blue Hydro Flask, Casio Calculator" required>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select" required>
+                            <option value="Electronics">Electronics</option>
+                            <option value="ID Cards & Wallets">ID Cards & Wallets</option>
+                            <option value="Books & Notes">Books & Notes</option>
+                            <option value="Keys">Keys</option>
+                            <option value="Clothing & Bags">Clothing & Bags</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Campus Location where did you found or lost it</label>
+                        <input type="text" name="location" class="form-control" placeholder="e.g., Main Library 2nd Floor" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Color, brand, distinguishing marks..." required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Your Contact Info (Email / Phone)</label>
+                    <input type="text" name="contact_info" class="form-control" value="{{ current_user.email }}" required>
+                </div>
+                <div class="mb-3 p-3 bg-light border rounded">
+                    <label class="form-label fw-bold text-primary">Security Verification Question (Optional - Recommended for Found Items)</label>
+                    <input type="text" name="security_question" class="form-control" placeholder="e.g., What is the lockscreen wallpaper? or What keychain is attached?">
+                    <small class="text-muted">Claimants must answer this question so you can verify they are the real owner.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Upload Photo (Optional)</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Publish Post</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

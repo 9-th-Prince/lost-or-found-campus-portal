@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">👤 My Student Profile</h5>
+                <span class="badge bg-{{ 'warning text-dark' if current_user.is_admin else 'info text-dark' }}">
+                    {{ 'Campus Admin' if current_user.is_admin else 'Student Account' }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-4">
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded border">
+                            <h3 class="fw-bold text-primary mb-0">{{ total_posts }}</h3>
+                            <small class="text-muted">Items Posted</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded border">
+                            <h3 class="fw-bold text-success mb-0">{{ resolved_posts }}</h3>
+                            <small class="text-muted">Items Resolved</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded border">
+                            <h3 class="fw-bold text-info mb-0">{{ current_user.study_groups|length }}</h3>
+                            <small class="text-muted">Study Groups</small>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mb-3">Edit Profile & Password</h5>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="name" class="form-control" value="{{ current_user.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Campus Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ current_user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Password <small class="text-muted">(Leave blank to keep current password)</small></label>
+                        <input type="password" name="new_password" class="form-control" placeholder="Enter new password...">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Profile Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

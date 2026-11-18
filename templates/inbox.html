@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h3 class="fw-bold">💬 Campus Chat & Study Hub</h3>
+    <ul class="nav nav-pills">
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if tab == 'public' else '' }}" href="{{ url_for('inbox', tab='public') }}">🌐 Open Campus Chat</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if tab == 'private' else '' }}" href="{{ url_for('inbox', tab='private') }}">👤 Private Chat</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ 'active' if tab == 'groups' else '' }}" href="{{ url_for('inbox', tab='groups') }}">📚 Study Groups</a>
+        </li>
+    </ul>
+</div>
+
+{% if tab == 'public' %}
+<div class="card shadow-sm">
+    <div class="card-header bg-success text-white fw-bold">
+        🌐 Open Campus Chat (Visible to all registered students)
+    </div>
+    <div id="chat-box" class="card-body" style="height: 400px; overflow-y: auto; background-color: #efeae2;">
+        {% for msg in public_messages %}
+            <div class="d-flex mb-2 {{ 'justify-content-end' if msg.sender_id == current_user.id else 'justify-content-start' }}">
+                <div class="p-2 px-3 rounded-3 shadow-sm {{ 'bg-success text-white' if msg.sender_id == current_user.id else 'bg-white' }}" style="max-width: 70%;">
+                    <div class="small fw-bold">{{ 'You' if msg.sender_id == current_user.id else msg.sender.name }}</div>
+                    <div>{{ msg.body }}</div>
+                    <div class="text-end" style="font-size: 0.7rem; opacity: 0.75;">{{ msg.timestamp.strftime('%I:%M %p') }}</div>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-center text-muted mt-5">No messages yet. Say hello to everyone on campus!</p>
+        {% endfor %}
+    </div>
+    <div class="card-footer bg-white">
+        <form method="POST" class="d-flex gap-2">
+            <input type="hidden" name="room_type" value="public">
+            <input type="text" name="body" class="form-control" placeholder="Message all students..." required autofocus>
+            <button type="submit" class="btn btn-success px-4">Send</button>
+        </form>
+    </div>
+</div>
+
+{% elif tab == 'private' %}
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white fw-bold">Search Students</div>
+            <div class="card-body">
+                <form method="GET" class="d-flex gap-1 mb-3">
+                    <input type="hidden" name="tab" value="private">
+                    <input type="text" name="q" class="form-control form-control-sm" placeholder="Search name or email..." value="{{ user_search }}">
+                    <button type="submit" class="btn btn-sm btn-primary">Search</button>
+                </form>
+                <div class="list-group" style="max-height: 340px; overflow-y: auto;">
+                    {% for u in searched_users %}
+                        <a href="{{ url_for('inbox', tab='private', user_id=u.id, q=user_search) }}"
+                           class="list-group-item list-group-item-action {{ 'active' if active_user and active_user.id == u.id else '' }}">
+                            <div class="fw-bold d-flex justify-content-between align-items-center">
+                                <span>{{ u.name }}</span>
+                                {% if unread_by_sender.get(u.id) %}
+                                    <span class="badge rounded-pill bg-danger">{{ unread_by_sender.get(u.id) }}</span>
+                                {% endif %}
+                            </div>
+                            <small class="{{ 'text-light' if active_user and active_user.id == u.id else 'text-muted' }}">{{ u.email }}</small>
+                        </a>
+                    {% else %}
+                        <p class="text-muted small text-center">No matching students found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            {% if active_user %}
+                <div class="card-header bg-primary text-white fw-bold">
+                    👤 Chatting with {{ active_user.name }} ({{ active_user.email }})
+                </div>
+                <div id="chat-box" class="card-body" style="height: 380px; overflow-y: auto; background-color: #efeae2;">
+                    {% for msg in private_messages %}
+                        <div class="d-flex mb-2 {{ 'justify-content-end' if msg.sender_id == current_user.id else 'justify-content-start' }}">
+                            <div class="p-2 px-3 rounded-3 shadow-sm {{ 'bg-primary text-white' if msg.sender_id == current_user.id else 'bg-white' }}" style="max-width: 70%;">
+                                <div>{{ msg.body }}</div>
+                                <div class="text-end" style="font-size: 0.7rem; opacity: 0.75;">{{ msg.timestamp.strftime('%I:%M %p') }}</div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted mt-5">Start a private conversation with {{ active_user.name }}!</p>
+                    {% endfor %}
+                </div>
+                <div class="card-footer bg-white">
+                    <form method="POST" action="{{ url_for('inbox', tab='private', user_id=active_user.id) }}" class="d-flex gap-2">
+                        <input type="hidden" name="room_type" value="private">
+                        <input type="text" name="body" class="form-control" placeholder="Type a private message..." required autofocus>
+                        <button type="submit" class="btn btn-primary px-4">Send</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="card-body text-center text-muted py-5">
+                    <h5>👈 Select or search a student on the left to start chatting privately!</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% elif tab == 'groups' %}
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-dark text-white fw-bold">+ Create Study Group</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('create_group') }}">
+                    <input type="text" name="name" class="form-control form-control-sm mb-2" placeholder="Group Name (e.g., Python Project)" required>
+                    <input type="text" name="description" class="form-control form-control-sm mb-2" placeholder="Topic / Course (optional)">
+                    <button type="submit" class="btn btn-sm btn-success w-100">Create Group</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white fw-bold">Campus Study Groups</div>
+            <div class="list-group list-group-flush">
+                {% for g in all_groups %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center {{ 'bg-light fw-bold' if active_group and active_group.id == g.id else '' }}">
+                        <a href="{{ url_for('inbox', tab='groups', group_id=g.id) }}" class="text-decoration-none text-dark">
+                            <div>📚 {{ g.name }}</div>
+                            <small class="text-muted">{{ g.members|length }} members</small>
+                        </a>
+                        {% if current_user not in g.members %}
+                            <a href="{{ url_for('join_group', group_id=g.id) }}" class="btn btn-sm btn-outline-success">Join</a>
+                        {% else %}
+                            <a href="{{ url_for('leave_group', group_id=g.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Leave this group?')">Leave</a>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="p-3 text-muted small text-center">No study groups yet. Create one above!</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            {% if active_group %}
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>📚 {{ active_group.name }}</strong>
+                        <small class="ms-2">({{ active_group.members|length }} members)</small>
+                        {% if active_group.description %}
+                            <span class="ms-2 badge bg-light text-dark">{{ active_group.description }}</span>
+                        {% endif %}
+                    </div>
+                    {% if current_user in active_group.members %}
+                        <a href="{{ url_for('leave_group', group_id=active_group.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to leave this group?')">Leave Group</a>
+                    {% endif %}
+                </div>
+
+                {% if current_user in active_group.members %}
+                    <div id="chat-box" class="card-body" style="height: 360px; overflow-y: auto; background-color: #efeae2;">
+                        {% for msg in group_messages %}
+                            <div class="d-flex mb-2 {{ 'justify-content-end' if msg.sender_id == current_user.id else 'justify-content-start' }}">
+                                <div class="p-2 px-3 rounded-3 shadow-sm {{ 'bg-success text-white' if msg.sender_id == current_user.id else 'bg-white' }}" style="max-width: 70%;">
+                                    <div class="small fw-bold">{{ 'You' if msg.sender_id == current_user.id else msg.sender.name }}</div>
+                                    <div>{{ msg.body }}</div>
+                                    <div class="text-end" style="font-size: 0.7rem; opacity: 0.75;">{{ msg.timestamp.strftime('%I:%M %p') }}</div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="text-center text-muted mt-5">Welcome to {{ active_group.name }}! Start the study discussion below.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer bg-white">
+                        <form method="POST" action="{{ url_for('inbox', tab='groups', group_id=active_group.id) }}" class="d-flex gap-2">
+                            <input type="hidden" name="room_type" value="group">
+                            <input type="text" name="body" class="form-control" placeholder="Message group..." required autofocus>
+                            <button type="submit" class="btn btn-success px-4">Send</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="card-body text-center py-5">
+                        <p class="text-muted">Join this study group to view and send messages.</p>
+                        <a href="{{ url_for('join_group', group_id=active_group.id) }}" class="btn btn-success">Join Group Now</a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="card-body text-center text-muted py-5">
+                    <h5>👈 Select a Study Group or create a new one on the left!</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    const chatBox = document.getElementById('chat-box');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+        let lastCount = chatBox.children.length;
+
+        const tab = "{{ tab }}";
+        const activeUserId = "{{ active_user.id if active_user else '' }}";
+        const activeGroupId = "{{ active_group.id if active_group else '' }}";
+
+        let apiUrl = "";
+        let myBubbleClass = "bg-success text-white";
+        let showSenderName = true;
+
+        if (tab === "public") {
+            apiUrl = "{{ url_for('api_chat_messages') }}?room_type=public";
+        } else if (tab === "private" && activeUserId) {
+            apiUrl = "{{ url_for('api_chat_messages') }}?room_type=private&other_user_id=" + activeUserId;
+            myBubbleClass = "bg-primary text-white";
+            showSenderName = false;
+        } else if (tab === "groups" && activeGroupId) {
+            apiUrl = "{{ url_for('api_chat_messages') }}?room_type=group&group_id=" + activeGroupId;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        if (apiUrl) {
+            setInterval(function () {
+                fetch(apiUrl)
+                    .then(res => res.json())
+                    .then(msgs => {
+                        if (msgs.length === 0 || msgs.length === lastCount) return;
+                        lastCount = msgs.length;
+
+                        chatBox.innerHTML = msgs.map(m => `
+                            <div class="d-flex mb-2 ${m.is_me ? 'justify-content-end' : 'justify-content-start'}">
+                                <div class="p-2 px-3 rounded-3 shadow-sm ${m.is_me ? myBubbleClass : 'bg-white'}" style="max-width: 70%;">
+                                    ${showSenderName ? `<div class="small fw-bold">${escapeHtml(m.sender_name)}</div>` : ''}
+                                    <div>${escapeHtml(m.body)}</div>
+                                    <div class="text-end" style="font-size: 0.7rem; opacity: 0.75;">${escapeHtml(m.time)}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    })
+                    .catch(err => console.log(err));
+            }, 3000);
+        }
+    }
+</script>
+{% endblock %}

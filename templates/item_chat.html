@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Item Handoff Chat with {{ other_user.name }}</strong>
+                    <span class="badge bg-warning text-dark ms-2">{{ item.post_type }}: {{ item.title }}</span>
+                </div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-light">← Back to Dashboard</a>
+            </div>
+            <div id="item-chat-box" class="card-body bg-light" style="height: 360px; overflow-y: auto;">
+                {% for msg in thread %}
+                    <div class="d-flex mb-3 {{ 'justify-content-end' if msg.sender_id == current_user.id else 'justify-content-start' }}">
+                        <div class="p-3 rounded-3 shadow-sm {{ 'bg-primary text-white' if msg.sender_id == current_user.id else 'bg-white border' }}" style="max-width: 75%;">
+                            <div class="small fw-bold">{{ 'You' if msg.sender_id == current_user.id else msg.sender.name }}</div>
+                            <div>{{ msg.body }}</div>
+                            <div class="text-end" style="font-size: 0.7rem; opacity: 0.8;">{{ msg.timestamp.strftime('%I:%M %p') }}</div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-center text-muted mt-5">Send a message to coordinate returning/claiming this item!</p>
+                {% endfor %}
+            </div>
+            <div class="card-footer bg-white">
+                <form method="POST" class="d-flex gap-2">
+                    <input type="text" name="body" class="form-control" placeholder="Write a message..." required autofocus>
+                    <button type="submit" class="btn btn-primary px-4">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const itemChatBox = document.getElementById('item-chat-box');
+    if (itemChatBox) {
+        itemChatBox.scrollTop = itemChatBox.scrollHeight;
+        let lastCount = itemChatBox.children.length;
+        const apiUrl = "{{ url_for('api_chat_messages') }}?room_type=item&item_id={{ item.id }}&other_user_id={{ other_user.id }}";
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        setInterval(function () {
+            fetch(apiUrl)
+                .then(res => res.json())
+                .then(msgs => {
+                    if (msgs.length === 0 || msgs.length === lastCount) return;
+                    lastCount = msgs.length;
+
+                    itemChatBox.innerHTML = msgs.map(m => `
+                        <div class="d-flex mb-3 ${m.is_me ? 'justify-content-end' : 'justify-content-start'}">
+                            <div class="p-3 rounded-3 shadow-sm ${m.is_me ? 'bg-primary text-white' : 'bg-white border'}" style="max-width: 75%;">
+                                <div class="small fw-bold">${escapeHtml(m.sender_name)}</div>
+                                <div>${escapeHtml(m.body)}</div>
+                                <div class="text-end" style="font-size: 0.7rem; opacity: 0.8;">${escapeHtml(m.time)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    itemChatBox.scrollTop = itemChatBox.scrollHeight;
+                })
+                .catch(err => console.log(err));
+        }, 3000);
+    }
+</script>
+{% endblock %}

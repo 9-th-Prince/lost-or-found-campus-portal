@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-4 mb-4 bg-white rounded shadow-sm">
+    <h2 class="fw-bold">Campus Lost & Found Feed</h2>
+    <p class="text-muted">Search for misplaced belongings or report an item you found on campus.</p>
+
+    <form method="GET" class="row g-2 mt-3">
+        <div class="col-md-5">
+            <input type="text" name="search" class="form-control" placeholder="Search by item name or location..." value="{{ request.args.get('search', '') }}">
+        </div>
+        <div class="col-md-3">
+            <select name="type" class="form-select">
+                <option value="">All Types (Lost & Found)</option>
+                <option value="Lost" {% if request.args.get('type') == 'Lost' %}selected{% endif %}>Lost Items</option>
+                <option value="Found" {% if request.args.get('type') == 'Found' %}selected{% endif %}>Found Items</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                <option value="Electronics">Electronics</option>
+                <option value="ID Cards & Wallets">ID Cards & Wallets</option>
+                <option value="Books & Notes">Books & Notes</option>
+                <option value="Keys">Keys</option>
+                <option value="Clothing & Bags">Clothing & Bags</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-dark">Filter</button>
+        </div>
+    </form>
+</div>
+
+<div class="row">
+    {% for item in items %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            {% if item.image_filename %}
+                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ item.title }}">
+            {% else %}
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <span>No Photo Provided</span>
+                </div>
+            {% endif %}
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-{{ 'danger' if item.post_type == 'Lost' else 'success' }}">{{ item.post_type }}</span>
+                    <span class="badge bg-{{ 'secondary' if item.status == 'Resolved' else 'info text-dark' }}">{{ item.status }}</span>
+                </div>
+                <h5 class="card-title">{{ item.title }}</h5>
+                <p class="card-text text-muted small mb-1"><strong>Category:</strong> {{ item.category }}</p>
+                <p class="card-text text-muted small mb-2"><strong>Location:</strong> {{ item.location }}</p>
+                <p class="card-text">{{ item.description[:90] }}{% if item.description|length > 90 %}...{% endif %}</p>
+            </div>
+            <div class="card-footer bg-white border-top-0">
+                <a href="{{ url_for('item_detail', item_id=item.id) }}" class="btn btn-outline-primary btn-sm w-100">View Details & Claim</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+        <p class="text-center text-muted my-5">No items reported yet. Click "+ Report Item" to add the first one!</p>
+    {% endfor %}
+</div>
+{% endblock %}

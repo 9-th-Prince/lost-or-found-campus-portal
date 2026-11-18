@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            {% if item.image_filename %}
+                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" class="card-img-top" alt="{{ item.title }}">
+            {% else %}
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 300px;">
+                    <span>No Photo Available</span>
+                </div>
+            {% endif %}
+            <div class="card-body">
+                <span class="badge bg-{{ 'danger' if item.post_type == 'Lost' else 'success' }} mb-2">{{ item.post_type }}</span>
+                <span class="badge bg-{{ 'secondary' if item.status == 'Resolved' else 'info text-dark' }} mb-2">{{ item.status }}</span>
+                <h3>{{ item.title }}</h3>
+                <p class="text-muted">Posted by {{ item.author.name }} on {{ item.date_posted.strftime('%b %d, %Y') }}</p>
+                <hr>
+                <p><strong>Category:</strong> {{ item.category }}</p>
+                <p><strong>Location:</strong> {{ item.location }}</p>
+                <p><strong>Description:</strong><br>{{ item.description }}</p>
+                <p><strong>Direct Contact:</strong> {{ item.contact_info }}</p>
+
+                {% if current_user.is_authenticated and current_user.id != item.user_id %}
+                    <a href="{{ url_for('inbox', tab='private', user_id=item.user_id) }}" class="btn btn-primary mt-2">
+                        💬 Message {{ item.author.name }}
+                    </a>
+                {% elif not current_user.is_authenticated %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm mt-2">Log in to message poster</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm p-4">
+            <h4>{{ 'Claim This Item' if item.post_type == 'Found' else 'I Found This Item!' }}</h4>
+            {% if item.status == 'Resolved' %}
+                <div class="alert alert-secondary">This item has already been marked as <strong>Resolved</strong>.</div>
+            {% elif not current_user.is_authenticated %}
+                <div class="alert alert-warning">
+                    Please <a href="{{ url_for('login') }}" class="alert-link">log in</a> or <a href="{{ url_for('register') }}" class="alert-link">register</a> to submit a claim so the poster can reply to you.
+                </div>
+            {% else %}
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Your Name</label>
+                        <input type="text" name="claimant_name" class="form-control" value="{{ current_user.name }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Your Phone or Email</label>
+                        <input type="text" name="claimant_contact" class="form-control" value="{{ current_user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        {% if item.security_question %}
+                            <label class="form-label fw-bold text-danger">Security Question: {{ item.security_question }}</label>
+                            <input type="text" name="answer" class="form-control" placeholder="Enter your verification answer..." required>
+                        {% else %}
+                            <label class="form-label">Message / Proof of Ownership</label>
+                            <textarea name="answer" class="form-control" rows="3" placeholder="Describe the item or where you found it..." required></textarea>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Submit Response</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
